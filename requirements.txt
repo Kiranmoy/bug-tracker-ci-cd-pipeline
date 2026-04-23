@@ -1,0 +1,8 @@
+pytest
+pytest-html
+playwright
+pytest-playwright
+robotframework
+robotframework-seleniumlibrary
+ruff
+mypy
