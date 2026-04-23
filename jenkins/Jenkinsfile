@@ -43,8 +43,10 @@ pipeline {
             stage('Unit Tests - Backend') {
             agent {
               docker {
-                image "golang:1.19"
+                image 'snakee/golang-junit:1.21'
                 reuseNode true
+                alwaysPull true
+                // args <docker comandline arguments>
               }
             }
 
@@ -65,6 +67,9 @@ pipeline {
 
               }
             }
+
+            post {}
+
           }
 
             stage('Unit Tests - Frontend') {
@@ -72,6 +77,8 @@ pipeline {
               docker {
                 image "node:20-alpine"
                 reuseNode true
+                alwaysPull true
+                // args <docker comandline arguments>
               }
             }
             steps {
@@ -84,6 +91,8 @@ pipeline {
                 """
               }
             }
+
+            post {}
           }
         }
 
