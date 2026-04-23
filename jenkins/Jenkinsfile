@@ -125,6 +125,21 @@ pipeline {
         reportName: "Frontend Test Execution Report"
       ]
 
+
+       emailext(
+            subject: "Automation Report | ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            mimeType: 'text/html',
+            to: 'qa-team@company.com',
+            body: """
+                <h3>Execution Completed</h3>
+                <p>Status: ${currentBuild.currentResult}</p>
+                <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+            """,
+            attachmentsPattern: 'bugtracker-backend/backend-results.html,bugtracker-frontend/frontend-results.html',
+            attachLog: true
+       )
+
+
       // Use the [Workspace Cleanup Plugin](https://jenkins.io)
       deleteDir()
     }
@@ -132,14 +147,7 @@ pipeline {
       echo 'Build was successful!'
     }
     failure {
-      // Send a [Mail Notification](https://jenkins.io)
-      mail to: 'team@example.com',
-        subject: "Failed Pipeline: ${env.JOB_NAME} [${env.BUILD_NUMBER}] - ${currentBuild.currentResult}",
-        body: "Check console output at ${env.BUILD_URL}",
-        // Comma-separated list of file patterns
-        attachmentsPattern: 'bugtracker-backend/backend-results.html, bugtracker-frontend/frontend-results.html',
-        attachLog: true // Optional: attaches the build log as well
-
+      echo 'Build was failed!'
     }
   }
 }
