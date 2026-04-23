@@ -1,11 +1,13 @@
 pipeline {
-    // agent any
+    agent any
+    /*
     agent {
         docker {
             image   "snakee/golang-junit:1.21"
             reuseNode   true
         }
     }
+    */
 
     stages {
     stage('Checkout') {
@@ -35,9 +37,38 @@ pipeline {
         }
 
         stage('Unit Tests - Backend') {
+            agent {
+                docker {
+                    image   "golang:1.19"
+                    reuseNode   true
+                }
+            }
             steps {
                 dir("bugtracker-backend") {
-                    sh "go test/ -v ./..."
+                    sh """
+                        echo 'Backend Test Execution Started'
+                        go test/ -v ./...
+                        echo 'Backend Test Execution Completed'
+                    """
+                }
+            }
+        }
+
+        stage('Unit Tests - Frontend') {
+            agent {
+                docker {
+                    image   "node:20-alpine"
+                    reuseNode   true
+                }
+            }
+            steps {
+                dir("bugtracker-frontend") {
+                    sh """
+                        echo 'Backend Test Execution Started'
+                        npm ci
+                        npm test
+                        echo 'Backend Test Execution Completed'
+                    """
                 }
             }
         }
