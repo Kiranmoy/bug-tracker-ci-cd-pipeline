@@ -39,51 +39,53 @@ pipeline {
 
     stage('Execute Tests') {
 
-      stage('Unit Tests - Backend') {
-        agent {
-          docker {
-            image "golang:1.19"
-            reuseNode true
+        parallel {
+            stage('Unit Tests - Backend') {
+            agent {
+              docker {
+                image "golang:1.19"
+                reuseNode true
+              }
+            }
+
+            steps {
+              dir("bugtracker-backend") {
+                sh """
+                echo 'Backend Test Execution Started'
+                go test / -v. / ...2 > & 1 | go - junit - report > test - results.xml
+
+                # Generate the Coverage Report
+                go test - coverprofile = coverage - covermode = atomic. / ...
+                  go tool cover - html = coverage.out - o coverage.html
+                echo 'Backend Test Execution Completed'
+
+                mkdir - p reports
+                mv coverage.html reports /
+                """
+
+              }
+            }
+          }
+
+            stage('Unit Tests - Frontend') {
+            agent {
+              docker {
+                image "node:20-alpine"
+                reuseNode true
+              }
+            }
+            steps {
+              dir("bugtracker-frontend") {
+                sh """
+                echo 'Backend Test Execution Started'
+                npm ci
+                npm test
+                echo 'Backend Test Execution Completed'
+                """
+              }
+            }
           }
         }
-
-        steps {
-          dir("bugtracker-backend") {
-            sh """
-            echo 'Backend Test Execution Started'
-            go test / -v. / ...2 > & 1 | go - junit - report > test - results.xml
-
-            # Generate the Coverage Report
-            go test - coverprofile = coverage - covermode = atomic. / ...
-              go tool cover - html = coverage.out - o coverage.html
-            echo 'Backend Test Execution Completed'
-
-            mkdir - p reports
-            mv coverage.html reports /
-            """
-
-          }
-        }
-      }
-
-      stage('Unit Tests - Frontend') {
-        agent {
-          docker {
-            image "node:20-alpine"
-            reuseNode true
-          }
-        }
-        steps {
-          dir("bugtracker-frontend") {
-            sh """
-            echo 'Backend Test Execution Started'
-            npm ci
-            npm test
-            echo 'Backend Test Execution Completed'
-            """
-          }
-        }
-      }
 
     }
 
