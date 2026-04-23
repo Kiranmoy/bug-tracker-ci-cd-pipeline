@@ -38,7 +38,7 @@ jobs:
         with:
           name: Backend Unit Tests Report
           path: bugtracker-backend/pytest-results.xml
-          reporter: jest-junit        # Format of test results
+          reporter: python-xunit        # Format of test results
 
   
   unit-tests-frontend:
