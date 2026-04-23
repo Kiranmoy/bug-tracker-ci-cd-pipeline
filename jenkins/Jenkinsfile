@@ -1,11 +1,43 @@
 pipeline {
-    agent any
+    // agent any
+    agent {
+        docker {
+            image   "snakee/golang-junit:1.21"
+            reuseNode   true
+        }
+    }
 
     stages {
+    stage('Checkout') {
+            steps {
+                // Pipeline from SCM: If you set up a Pipeline job and pointed it to a git repo to find the Jenkinsfile, Jenkins performs a "lightweight checkout" to grab the Jenkinsfile first, and then typically a full checkout of the repo, often using the Git Plugin.
+                // Implicit Behaviour: Even if you do not explicitly use checkout scm in your stages, the Jenkinsfile-driven job assumes you want the source code available in the workspace.
+                // Multibranch Pipelines: When using Multibranch Pipeline jobs, the plugin automatically handles checking out the specific branch/commit that triggered the job.
+
+                // Pulls code from your Git repository
+                checkout scm
+            }
+        }
+
+        stage('Environment Setup') {
+            steps {
+                sh '''
+                    echo 'Environment Setup Started'
+                    # Create and activate a virtual environment
+                    # python3 -m venv venv
+                    # . venv/bin/activate
+                    # Upgrade pip and install dependencies
+                    # pip install --upgrade pip
+                    # pip install -r requirements.txt
+                    echo 'Environment Setup Done'
+                '''
+            }
+        }
+
         stage('Unit Tests - Backend') {
             steps {
                 dir("bugtracker-backend") {
-                    go test/ -v ./...
+                    sh "go test/ -v ./..."
                 }
             }
         }
