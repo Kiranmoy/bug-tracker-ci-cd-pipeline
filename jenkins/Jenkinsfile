@@ -1,76 +1,149 @@
 pipeline {
-    agent any
-    /*
-    agent {
-        docker {
-            image   "snakee/golang-junit:1.21"
-            reuseNode   true
-        }
-    }
-    */
+  agent any
+  /*
+  agent {
+      docker {
+          image   "snakee/golang-junit:1.21"
+          reuseNode   true
+      }
+  }
+  */
 
-    stages {
+  stages {
+
     stage('Checkout') {
-            steps {
-                // Pipeline from SCM: If you set up a Pipeline job and pointed it to a git repo to find the Jenkinsfile, Jenkins performs a "lightweight checkout" to grab the Jenkinsfile first, and then typically a full checkout of the repo, often using the Git Plugin.
-                // Implicit Behaviour: Even if you do not explicitly use checkout scm in your stages, the Jenkinsfile-driven job assumes you want the source code available in the workspace.
-                // Multibranch Pipelines: When using Multibranch Pipeline jobs, the plugin automatically handles checking out the specific branch/commit that triggered the job.
+      steps {
+        // Pipeline from SCM: If you set up a Pipeline job and pointed it to a git repo to find the Jenkinsfile, Jenkins performs a "lightweight checkout" to grab the Jenkinsfile first, and then typically a full checkout of the repo, often using the Git Plugin.
+        // Implicit Behaviour: Even if you do not explicitly use checkout scm in your stages, the Jenkinsfile-driven job assumes you want the source code available in the workspace.
+        // Multibranch Pipelines: When using Multibranch Pipeline jobs, the plugin automatically handles checking out the specific branch/commit that triggered the job.
 
-                // Pulls code from your Git repository
-                checkout scm
-            }
-        }
-
-        stage('Environment Setup') {
-            steps {
-                sh '''
-                    echo 'Environment Setup Started'
-                    # Create and activate a virtual environment
-                    # python3 -m venv venv
-                    # . venv/bin/activate
-                    # Upgrade pip and install dependencies
-                    # pip install --upgrade pip
-                    # pip install -r requirements.txt
-                    echo 'Environment Setup Done'
-                '''
-            }
-        }
-
-        stage('Unit Tests - Backend') {
-            agent {
-                docker {
-                    image   "golang:1.19"
-                    reuseNode   true
-                }
-            }
-            steps {
-                dir("bugtracker-backend") {
-                    sh """
-                        echo 'Backend Test Execution Started'
-                        go test/ -v ./...
-                        echo 'Backend Test Execution Completed'
-                    """
-                }
-            }
-        }
-
-        stage('Unit Tests - Frontend') {
-            agent {
-                docker {
-                    image   "node:20-alpine"
-                    reuseNode   true
-                }
-            }
-            steps {
-                dir("bugtracker-frontend") {
-                    sh """
-                        echo 'Backend Test Execution Started'
-                        npm ci
-                        npm test
-                        echo 'Backend Test Execution Completed'
-                    """
-                }
-            }
-        }
+        // Pulls code from your Git repository
+        checkout scm
+      }
     }
+
+    stage('Environment Setup') {
+      steps {
+        sh ''
+        '
+        echo 'Environment Setup Started'
+        # Create and activate a virtual environment
+        # python3 - m venv venv
+        #.venv / bin / activate
+        # Upgrade pip and install dependencies
+        # pip install--upgrade pip
+        # pip install - r requirements.txt
+        echo 'Environment Setup Done'
+        ''
+        '
+      }
+    }
+
+    stage('Execute Tests') {
+
+      stage('Unit Tests - Backend') {
+        agent {
+          docker {
+            image "golang:1.19"
+            reuseNode true
+          }
+        }
+
+        steps {
+          dir("bugtracker-backend") {
+            sh ""
+            "
+            echo 'Backend Test Execution Started'
+            go test / -v. / ...2 > & 1 | go - junit - report > test - results.xml
+
+            # Generate the Coverage Report
+            go test - coverprofile = coverage - covermode = atomic. / ...
+              go tool cover - html = coverage.out - o coverage.html
+            echo 'Backend Test Execution Completed'
+
+            mkdir - p reports
+            mv coverage.html reports /
+              ""
+            "
+
+          }
+        }
+      }
+
+      stage('Unit Tests - Frontend') {
+        agent {
+          docker {
+            image "node:20-alpine"
+            reuseNode true
+          }
+        }
+        steps {
+          dir("bugtracker-frontend") {
+            sh ""
+            "
+            echo 'Backend Test Execution Started'
+            npm ci
+            npm test
+            echo 'Backend Test Execution Completed'
+            ""
+            "
+          }
+        }
+      }
+
+    }
+
+  }
+
+  // Global post actions
+  post {
+    always {
+      echo 'I will always run, no matter what!'
+
+      junit "bugtracker-frontend/test-results.xml"
+      junit "bugtracker-backend/test-results.xml"
+
+      /*
+      Jenkins performs three main actions:
+      * Analysis: It parses the XML file to count passed, failed, and skipped tests.
+      * Visualization: It creates a "Test Result Trend" graph on the job's main page.
+      * Build Status: If any tests in that file failed, it automatically marks the build status as Unstable (yellow) instead of Success (green).
+      */
+
+      // Publish HTML Report
+      publishHTML target: [
+        allowMissing: false,
+        alwaysLinkToLastBuild: true,
+        keepAll: true,
+        reportDir: "bugtracker-backend/reports",
+        reportFiles: "coverage.html",
+        reportName: "Backend Coverage Report"
+      ]
+
+      publishHTML target: [
+        allowMissing: false,
+        alwaysLinkToLastBuild: true,
+        keepAll: true,
+        reportDir: "bugtracker-frontend/reports/coverage",
+        reportFiles: "index.html",
+        reportName: "Frontend Test Execution Report"
+      ]
+
+      // Use the [Workspace Cleanup Plugin](https://jenkins.io)
+      deleteDir()
+    }
+    success {
+      echo 'Build was successful!'
+    }
+    failure {
+      // Send a [Mail Notification](https://jenkins.io)
+      mail to: 'team@example.com',
+        subject: "Failed Pipeline: ${env.JOB_NAME} [${env.BUILD_NUMBER}] - ${currentBuild.currentResult}",
+        body: "Check console output at ${env.BUILD_URL}",
+        // Comma-separated list of file patterns
+        attachmentsPattern: 'bugtracker-backend/backend-results.html, bugtracker-frontend/frontend-results.html',
+        attachLog: true // Optional: attaches the build log as well
+
+    }
+  }
 }
