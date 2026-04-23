@@ -24,8 +24,7 @@ pipeline {
 
     stage('Environment Setup') {
       steps {
-        sh ''
-        '
+        sh '''
         echo 'Environment Setup Started'
         # Create and activate a virtual environment
         # python3 - m venv venv
@@ -34,8 +33,7 @@ pipeline {
         # pip install--upgrade pip
         # pip install - r requirements.txt
         echo 'Environment Setup Done'
-        ''
-        '
+        '''
       }
     }
 
@@ -51,8 +49,7 @@ pipeline {
 
         steps {
           dir("bugtracker-backend") {
-            sh ""
-            "
+            sh """
             echo 'Backend Test Execution Started'
             go test / -v. / ...2 > & 1 | go - junit - report > test - results.xml
 
@@ -63,8 +60,7 @@ pipeline {
 
             mkdir - p reports
             mv coverage.html reports /
-              ""
-            "
+            """
 
           }
         }
@@ -79,14 +75,12 @@ pipeline {
         }
         steps {
           dir("bugtracker-frontend") {
-            sh ""
-            "
+            sh """
             echo 'Backend Test Execution Started'
             npm ci
             npm test
             echo 'Backend Test Execution Completed'
-            ""
-            "
+            """
           }
         }
       }
