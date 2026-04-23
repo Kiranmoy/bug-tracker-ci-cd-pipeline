@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  unit-tests:
+  unit-tests-backend:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -25,9 +25,16 @@ jobs:
           pip install -r requirements.txt
 
       - name: Execute Backend Tests
-        working-directory: ./bugtracker-backend
+        working-directory: ./bugtracker-frontend
         run: |
           ruff check --fix . && ruff format . && mypy .
           pytest \
           --html=unit-test-report.html \
           --self-contained-html
+
+  unit-tests-frontend:
+    needs: unit-tests-backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
