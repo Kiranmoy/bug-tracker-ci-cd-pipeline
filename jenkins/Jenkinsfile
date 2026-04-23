@@ -68,7 +68,7 @@ pipeline {
               }
             }
 
-            post {}
+            // post {}
 
           }
 
@@ -92,7 +92,7 @@ pipeline {
               }
             }
 
-            post {}
+            // post {}
           }
         }
 
