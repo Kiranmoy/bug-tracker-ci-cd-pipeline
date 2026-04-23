@@ -28,6 +28,6 @@ jobs:
         working-directory: ./bugtracker-backend
         run: |
           ruff check --fix . && ruff format . && mypy .
-          pytest tests \
+          pytest \
           --html=unit-test-report.html \
           --self-contained-html
