@@ -28,10 +28,19 @@ jobs:
         working-directory: ./bugtracker-backend
         run: |
           ruff check --fix . && ruff format . && mypy .
-          pytest \
+          pytest --junitxml=pytest-results.xml \
           --html=unit-test-report.html \
           --self-contained-html
 
+      - name: Publish Backend Test Results
+        uses: dorny/test-reporter@v1
+        if: always() # Use always() in the next step so reports publish even if tests fail
+        with:
+          name: Backend Unit Tests Report
+          path: bugtracker-backend/pytest-results.xml
+          reporter: jest-junit        # Format of test results
+
+  
   unit-tests-frontend:
     needs: unit-tests-backend
     runs-on: ubuntu-latest
@@ -53,6 +62,13 @@ jobs:
         working-directory: ./bugtracker-frontend
         run: |
           ruff check --fix . && ruff format . && mypy .
-          pytest \
+          pytest --junitxml=pytest-results.xml \
           --html=unit-test-report.html \
           --self-contained-html
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always() # Use always() in the next step so reports publish even if tests fail
+        with:
+          name: Frontend Unit Tests Report
+          files: bugtracker-frontend/pytest-results.xml
